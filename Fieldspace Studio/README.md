@@ -1,35 +1,42 @@
-# Fieldspace Studio v4 — Lorentzian Spacetime & Clock Laboratory
+# Fieldspace Studio v5 — Offline Geometry, Relativity & Voxel Worlds
 
-Extract the ZIP and open `Fieldspace Studio/index.html` locally in a modern browser. All runtime code is embedded; no backend, CDN, API key or account is required. WebGL 2 is needed for shaded ray tracing; the spatial geodesic-lattice view has a Canvas 2D fallback.
+**Run:** Extract `Fieldspace_Studio_Offline_v5.zip`, open **`Fieldspace Studio/index.html`** in a modern browser. This version uses **no server, CDN, account, API key, or installed assets**. WebGL 2 enables the GPU view; the voxel scene and geodesic-lattice overlay also have a Canvas 2D fallback (slower on large worlds).
 
-## Lorentzian 3+1 spacetime
+## NEW: Minecraft-like, metric-deformed voxel terrain
 
-Enable **Simulate 3+1D spacetime metric**. Four user-entered Wolfram-style field components are functions of x, y, z, t:
-- V=(X,Y,Z), h_ij = δ_ij + α V_i V_j
-- Lapse N=exp(clamp(κ T,-6,6)), with T the fourth field
-- Shift β^i = σ V^i
-- ds² = -N² dt² + h_ij (dx^i + β^i dt)(dx^j + β^j dt), signature (-+++), with c=1.
+In **Metric & integration → Reference geometry**, select **Voxel world · Perlin lattice terrain**. The renderer generates finite, stepped terrain made from cubic cells in a lattice. It uses seeded, 2D gradient Perlin noise with multiple octaves (fractal Brownian motion). The heights are deterministic for each seed, block width, frequency and relief setting. Exposed tops and sides form grassy/dirt/stone blocks, with optional water blocks. You can instead select Desert, Snow, or Alien biomes.
 
-Lapse strength κ and shift strength σ are adjustable. The metric can explicitly depend on time. Setting X=Y=Z=T=0 recovers flat Minkowski spacetime. These arbitrary fields **do not automatically solve Einstein's field equations**.
+Controls:
 
-In the shaded WebGL 2 scenes, the spacetime renderer attempts numerical 4D Hamiltonian tracing of null light paths backward in time, using finite-difference derivatives. This path is GPU-intensive. The geodesic **lattice overlay remains a spatial geodesic lattice at a fixed time**, not a null-lattice plot. The 3D spatial-metric mode remains available.
+- **World seed:** change the reproducible terrain pattern.
+- **World width (blocks):** 10, 14, 18, 22, or 26 blocks per side.
+- **Lattice spacing / block size:** coordinate spacing between adjacent lattice nodes.
+- **Terrain relief** and **Perlin noise frequency:** change the height variation and spatial scale.
+- **World biome:** Grassland, Desert, Snow, Alien.
+- **Deform vertices with metric geodesics:** turn lattice distortion on or off.
+- **Draw cube / lattice edges:** draw visible edges between shared lattice nodes.
+- **Add water blocks below sea level:** fill shallow areas with blue voxel cells.
+- **Update lattice geometry as time evolves:** optionally rebuild the mesh for current metric time slices. This costs CPU time; disabled by default.
+- **Regenerate world**, **View entire world**.
 
-## Place and compare clocks
+### How lattice alignment works
 
-Add up to 40 clocks with independent x/y/z coordinates, coordinate velocities (dx/dt,dy/dt,dz/dt) and names. Use **Add clock**, **At camera**, or **Click to place** on the coordinate Z-plane, and independently edit each clock in the sidebar. Clock faces and elapsed proper-time values appear in the 3D view.
+Each integer grid corner `(i,j,k)` is mapped to **one cached world-space vertex**. Every face that touches that corner uses the identical coordinates, so adjacent cubes have **no cracks or inconsistent corner positions**. With a flat Euclidean metric, cubes form an ordinary axis-aligned Minecraft-like voxel grid. With warping enabled, the map is an approximate *spatial exponential map*: from an origin, use the inverse square-root of the spatial metric to create the initial tangent, then numerically integrate the Riemannian geodesic equation to place each node. Connecting the nodes makes a curved/deformed lattice, and each block's polygonal corners lie exactly on those nodes. The edges between them are rendered as straight segments; **these edges are not individually guaranteed to be geodesics**. This voxel lattice is a **separate geodesic-shot coordinate mesh**, not a precise intersection of the independently integrated geodesic curves in the existing overlay mode. Under strong fields the exponential map can fold, making cells overlap.
 
-Enable **Evolve coordinate time** (paused by default). Clocks move with their entered coordinate velocities. Each clock accumulates proper time by midpoint integration of
+**Important physics distinction:** A three-dimensional world of spatial cubes is not a network of 4D spacetime null curves. In 3+1D spacetime mode, the terrain occupies a spatial slice at the chosen coordinate time. The terrain mesh is **rasterized**, not rendered by the 4D null-ray tracer; rays still use null-geodesic integration for the original shaded scenes. Geometry is based on `h_ij = δ_ij + α V_i V_j`, while `T` affects the lapse/clock rates in spacetime mode. There is no gravitational collapse, block collision, voxel editing, or Einstein-equation solver in this version.
 
-dτ/dt = sqrt(N² - h_ij (v^i + β^i)(v^j + β^j)).
+## Preserved from v4
 
-Non-timelike choices (negative or zero expression inside the square root) are flagged, not assigned imaginary time. Worldlines are prescribed and **not automatically geodesic/free-falling**. Clock comparisons use coordinate-time slices and are not direct observed simultaneity without a synchronization model.
+- Wolfram-*style* editable `X[x,y,z,t]`, `Y[x,y,z,t]`, `Z[x,y,z,t]`, and `T[x,y,z,t]` components; scalar/user-defined functions and a documented offline **subset** of Wolfram Language. A full Mathematica evaluator requires a Wolfram engine and isn't included.
+- Spatial metric `h_ij = δ_ij + α V_i V_j`.
+- Optional Lorentzian metric `ds² = −N²dt² + h_ij(dx^i+β^i dt)(dx^j+β^j dt)`, `N = exp(clamp(κT,-6,6))`, `β = σV`, signature (−+++), c = 1. Arbitrary input fields are not assumed to solve Einstein's field equations.
+- Relativistic placeable clocks, time evolution, motion-based time dilation and position-dependent clock-rate variation.
+- Free-fly first-person WASD controls, Space/Shift vertical movement, mouse capture; Orbit camera; metric-distance movement toggle.
+- Old spheres, rods, solids, geodesic-lattice scenes; project JSON save/load and screenshot export.
+- Exported project **version 5** preserves world seed, size, relief, frequency, biome, lattice warping, edges, water, and follow-time options. The importer accepts older projects with no terrain settings.
 
-Try X=Y=Z=0 and T=-1/(1+Sqrt[x^2+y^2+z^2]); clocks at (0,0,0) and (4,0,0) then run at different rates when κ>0. In flat spacetime a moving clock with v=0.6 advances at 0.8 proper seconds per coordinate second.
+## Tests and limits
 
-## Existing features
+Browser tests passed for voxel generation, Perlin seed changes, exact shared node reuse, expected mesh vertex counts, zero-field flatness, nonzero-field spatial warping, biome/world-size controls, previous clock features, project export, and switching scenes. The Canvas fallback rendered a complete world in the testing environment. **A hardware WebGL 2 environment was unavailable**, so the GPU terrain shader's final output was not visually tested. If the GPU path fails, the app attempts the Canvas fallback. For a more responsive experience, lower World width and disable live metric-time rebuilding.
 
-First-person/orbit cameras, WASD + Space/Shift navigation, metric-distance movement toggle, 3D objects, spatial geodesic-lattice overlay, time-dependent scalar equations, JSON project export/import (including clocks and older projects), screenshots, and a subset of Wolfram-style input functions and definitions. This app is **not a complete Mathematica engine**.
-
-## Tested / limitations
-
-Browser tests passed for lapse-based clock differences, flat-spacetime time dilation (v=0.6 -> 0.8), shift contribution, time-dependent fields, non-timelike detection and JSON export. **WebGL 2 was unavailable in the test browser**, so the 4D GPU shader's actual rendering/compilation is unverified. Numerical methods are approximate and are not a validated GR solver. Reference for geodesic visualization concepts: https://3-dimensional.space/render/ (implementation is independent).
+Original reference for geodesic-visualization concepts: https://3-dimensional.space/render/. Code is independently written; not a copy of that site or Minecraft.
