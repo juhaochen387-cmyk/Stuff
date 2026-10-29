@@ -248,7 +248,7 @@ q+=ds*movement;p+=ds*fm;travel+=length(movement.xyz)*ds;
 if(any(greaterThan(abs(q),vec4(1000.))))break;
 }
 if(!hit){outColor=vec4(pow(background(look),vec3(.82)),1.);return;}
-int k;objectSDF(q.xyz,k);vec2 e=vec2(.014,0.);vec3 norm=normalize(vec3(sdOnly(q.xyz+e.xyy)-sdOnly(q.xyz-e.xyy),sdOnly(q.xyz+e.yxy)-sdOnly(q.xyz-e.yxy),sdOnly(q.xyz+e.yyx)-sdOnly(q.xyz-e.yyx)));
+int k;objectSDF(q.xyz,k);vec2 normalEpsilon=vec2(.014,0.);vec3 norm=normalize(vec3(sdOnly(q.xyz+normalEpsilon.xyy)-sdOnly(q.xyz-normalEpsilon.xyy),sdOnly(q.xyz+normalEpsilon.yxy)-sdOnly(q.xyz-normalEpsilon.yxy),sdOnly(q.xyz+normalEpsilon.yyx)-sdOnly(q.xyz-normalEpsilon.yyx)));
 vec3 light=normalize(vec3(-.5,-.35,1.));float diffuse=max(dot(norm,light),0.);vec3 base=surfaceColor(q.xyz,k);
 float rim=pow(1.-max(dot(norm,normalize(uCam-q.xyz)),0.),2.);
 vec3 col=base*(.28+.72*diffuse)+.13*rim+vec3(.05,.07,.11)*pow(max(dot(reflect(-light,norm),normalize(uCam-q.xyz)),0.),22.);
