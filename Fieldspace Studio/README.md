@@ -1,25 +1,35 @@
-# Fieldspace Studio v3 — offline field/metric exploration
+# Fieldspace Studio v4 — Lorentzian Spacetime & Clock Laboratory
 
-Extract the ZIP and open `Fieldspace Studio/index.html` locally in a modern browser. No backend, account, API key, CDN or online assets are required. WebGL 2 is needed for shaded scenes; the geodesic lattice has a Canvas 2D fallback. All runtime code is embedded in the HTML.
+Extract the ZIP and open `Fieldspace Studio/index.html` locally in a modern browser. All runtime code is embedded; no backend, CDN, API key or account is required. WebGL 2 is needed for shaded ray tracing; the spatial geodesic-lattice view has a Canvas 2D fallback.
 
-## What's new in v3
+## Lorentzian 3+1 spacetime
 
-- **Metric-aware movement checkbox:** When selected, WASD/Space/Shift movement uses the spatial metric `g(x,t) = I + α v(x,t) v(x,t)^T`, with `v=(X,Y,Z)`, to maintain the specified local *proper (metric)* speed. The movement direction is transformed by `g^(-1/2)` (midpoint sampled), so its coordinate distance depends on the local metric; ordinary Euclidean movement is still available. The interface shows cumulative coordinate distance versus proper path length. These are *path lengths*, not shortest geodesic distances between endpoints. Metric-aware movement is opt-in; use the checkbox.
-- **Four editable Wolfram-style field components:** `X[x,y,z,t]`, `Y[x,y,z,t]`, `Z[x,y,z,t]`, `T[x,y,z,t]`, with `t` available in every formula. `X[x_,y_,z_,t_] := ...`-style definitions are supported by the existing restricted parser; three-argument spatial definitions are also accepted. `T` is the optional time-evolution rate, not an independent fourth spatial coordinate in the 3D ray shader.
-- **Constant time by default:** `t=0`, `T=0`, and the **Evolve time** checkbox is off. The editable time field permits viewing snapshots at chosen times. To see automatic time evolution, set `T` to `1` (or an expression), apply, and enable Evolve time. Time then follows `dt/ds = timeRate * T[x,y,z,t]`, sampled at the camera. The spatial field, WebGL geodesics, field arrows and curved lattice react to the selected time.
-- **Explicit camera modes:** Sidebar and viewport controls for First-person and Orbit stay synchronized. WASD strafing, Space/Shift up/down, Ctrl boost, mouse drag, pointer lock, and Reset continue to work. Orbit pans with Shift+drag/right-drag; W/A/S/D also translate the orbit target.
-- **Project compatibility:** JSON now includes time settings, fourth component, metric-motion mode, and distance counters. Older three-component projects still import with `T=0`.
+Enable **Simulate 3+1D spacetime metric**. Four user-entered Wolfram-style field components are functions of x, y, z, t:
+- V=(X,Y,Z), h_ij = δ_ij + α V_i V_j
+- Lapse N=exp(clamp(κ T,-6,6)), with T the fourth field
+- Shift β^i = σ V^i
+- ds² = -N² dt² + h_ij (dx^i + β^i dt)(dx^j + β^j dt), signature (-+++), with c=1.
 
-## Other features
+Lapse strength κ and shift strength σ are adjustable. The metric can explicitly depend on time. Setting X=Y=Z=T=0 recovers flat Minkowski spacetime. These arbitrary fields **do not automatically solve Einstein's field equations**.
 
-- Editable Wolfram-style math parser (subset), scalar and user function definitions, nested functions, `If`, `Piecewise`, many standard Wolfram numerical functions; see in-app help.
-- WebGL 2 geodesic ray integration of shaded SDF scenes and a separate three-family geodesic lattice mode with configurable line density and extent.
-- Export/import project JSON and save PNG.
+In the shaded WebGL 2 scenes, the spacetime renderer attempts numerical 4D Hamiltonian tracing of null light paths backward in time, using finite-difference derivatives. This path is GPU-intensive. The geodesic **lattice overlay remains a spatial geodesic lattice at a fixed time**, not a null-lattice plot. The 3D spatial-metric mode remains available.
 
-## Mathematical and compatibility limitations
+## Place and compare clocks
 
-The spatial metric is positive-definite for `α≥0`: `g_spatial = I₃ + α v vᵀ`. The temporal component `T` controls the simulation's time coordinate and is **not** included in a 4D Lorentzian spacetime metric. This is a time-dependent 3D Riemannian model, **not** a general-relativity simulation, and its spatial geodesics are not true null geodesics. The lattice lines are integrated independently and do not guarantee a global geodesic coordinate grid. Calculations are approximate and do not prove mathematical/physical accuracy.
+Add up to 40 clocks with independent x/y/z coordinates, coordinate velocities (dx/dt,dy/dt,dz/dt) and names. Use **Add clock**, **At camera**, or **Click to place** on the coordinate Z-plane, and independently edit each clock in the sidebar. Clock faces and elapsed proper-time values appear in the 3D view.
 
-The offline expression parser is **not a complete Mathematica/Wolfram Language kernel**. It does not implement the full set of symbolic transformations, definitions, patterns, packages or arbitrary Wolfram language programs. No API key is needed for the supported offline functions; full Wolfram evaluation would require a separate engine or service.
+Enable **Evolve coordinate time** (paused by default). Clocks move with their entered coordinate velocities. Each clock accumulates proper time by midpoint integration of
 
-Reference (independent implementation): https://3-dimensional.space/render/
+dτ/dt = sqrt(N² - h_ij (v^i + β^i)(v^j + β^j)).
+
+Non-timelike choices (negative or zero expression inside the square root) are flagged, not assigned imaginary time. Worldlines are prescribed and **not automatically geodesic/free-falling**. Clock comparisons use coordinate-time slices and are not direct observed simultaneity without a synchronization model.
+
+Try X=Y=Z=0 and T=-1/(1+Sqrt[x^2+y^2+z^2]); clocks at (0,0,0) and (4,0,0) then run at different rates when κ>0. In flat spacetime a moving clock with v=0.6 advances at 0.8 proper seconds per coordinate second.
+
+## Existing features
+
+First-person/orbit cameras, WASD + Space/Shift navigation, metric-distance movement toggle, 3D objects, spatial geodesic-lattice overlay, time-dependent scalar equations, JSON project export/import (including clocks and older projects), screenshots, and a subset of Wolfram-style input functions and definitions. This app is **not a complete Mathematica engine**.
+
+## Tested / limitations
+
+Browser tests passed for lapse-based clock differences, flat-spacetime time dilation (v=0.6 -> 0.8), shift contribution, time-dependent fields, non-timelike detection and JSON export. **WebGL 2 was unavailable in the test browser**, so the 4D GPU shader's actual rendering/compilation is unverified. Numerical methods are approximate and are not a validated GR solver. Reference for geodesic visualization concepts: https://3-dimensional.space/render/ (implementation is independent).
